@@ -15,6 +15,9 @@ const convertPropertyToProject = (property: ContextProperty): Project => {
     title: property.title,
     description: property.description,
     price: `₦ ${property.price?.toLocaleString() || '0'}`,
+    priceValue: property.price || 0,
+    listingType: property.listingType || 'sale',
+    createdAt: property.createdAt ? new Date(property.createdAt).toISOString() : undefined,
     isNew: property.condition === 'new',
     propertyType: property.propertyType,
     location: {

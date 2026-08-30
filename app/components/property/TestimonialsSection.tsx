@@ -26,7 +26,7 @@ const TestimonialsSection: React.FC = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-12">
           <div className="text-center mb-12 md:mb-0 md:text-left flex items-center space-x-4 flex-col md:flex-row">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2 items-center">
-              Smart Properties
+              What Our Users Say
             </h1>
             <div className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
               platform

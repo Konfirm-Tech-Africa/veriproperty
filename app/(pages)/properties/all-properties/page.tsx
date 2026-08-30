@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import PropertyPage from './PropertyPage'
 
 const page = () => {
   return (
-    <div><PropertyPage/></div>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>}>
+      <PropertyPage />
+    </Suspense>
   )
 }
 

@@ -208,19 +208,20 @@ export default function DashboardPropertyLists({
 
   // Adapt Property to Project type for PropertyDetails component
   const adaptPropertyForDetails = (property: Property): Project => {
-    const { 
-      _id, 
-      price, 
-      currency, 
-      media, 
-      features, 
-      condition, 
-      location, 
-      description, 
-      title, 
-      agentId,
-      propertyType,
-    } = property;
+  const { 
+    _id, 
+    price, 
+    currency, 
+    media, 
+    features, 
+    condition, 
+    location, 
+    description, 
+    title, 
+    agentId,
+    propertyType,
+    listingType,
+  } = property;
     
     // Format price with currency for display
     const formattedPrice = `${currency} ${price.toLocaleString()}`;
@@ -252,18 +253,20 @@ export default function DashboardPropertyLists({
     };
     
     return {
-      id: _id,
-      title,
-      description: description || 'No description available',
-      price: formattedPrice,
-      location: adaptedLocation,
-      features: adaptedFeatures,
-      images,
-      agentId: agentId || 'default-agent-id',
-      isNew: condition === 'new',
-      propertyType: propertyType,
-    };
+    id: _id,
+    title,
+    description: description || 'No description available',
+    price: formattedPrice,
+    priceValue: price || 0,
+    listingType: listingType || 'sale',
+    location: adaptedLocation,
+    features: adaptedFeatures,
+    images,
+    agentId: agentId || 'default-agent-id',
+    isNew: condition === 'new',
+    propertyType: propertyType,
   };
+};
 
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {

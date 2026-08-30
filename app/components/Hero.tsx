@@ -3,6 +3,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import FilterModal from "./filters/FilterModal";
 import SearchFilterBar from "./filters/SearchFilterBar";
+import QuickSearchCategories from "./QuickSearchCategories";
 
 export default function Hero() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,9 +42,10 @@ export default function Hero() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight sm:leading-snug lg:leading-normal">
               Selling your property?
             </h1>
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl mt-4 sm:mt-6 lg:mt-8 text-white/90">
+                        <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl mt-4 sm:mt-6 lg:mt-8 text-white/90">
               Start with the right agent
             </p>
+            <QuickSearchCategories />
           </div>
         </div>
 

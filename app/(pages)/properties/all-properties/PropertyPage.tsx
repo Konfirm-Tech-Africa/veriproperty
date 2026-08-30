@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import PropertySearchFilterBar from '@/app/components/property/PropertySearchFilterBar'
 import ProjectCard from '@/app/components/property/PropertyCard';
 import { Project } from '@/app/components/common/fallbackProjects';
@@ -7,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Footer from '@/app/components/footer';
 import { Navbar } from '@/app/components/navbar';
 import { useProperty } from '@/app/context/PropertyContext';
+import { ContextProperty } from '@/app/components/property/types/property';
 
 // Define the filter state interface
 interface SearchFilters {
@@ -27,6 +29,7 @@ interface ApiProperty {
   price: number;
   propertyType: string;
   condition: string;
+  listingType?: 'sale' | 'rent' | 'shortlet';
   location?: {
     address?: string;
     city?: string;
@@ -48,13 +51,16 @@ interface ApiProperty {
   };
 }
 
-const convertPropertyToProject = (property: ApiProperty): Project => {
+const convertPropertyToProject = (property: ContextProperty): Project => {
   return {
     id: property._id,
-    agentId: property.userId,
+    agentId: property.agentId,
     title: property.title,
     description: property.description,
     price: `₦ ${property.price?.toLocaleString() || '0'}`,
+    priceValue: property.price || 0,
+    listingType: property.listingType || 'sale',
+    createdAt: property.createdAt ? new Date(property.createdAt).toISOString() : undefined,
     isNew: property.condition === 'new',
     propertyType: property.propertyType,
     location: {
@@ -100,8 +106,25 @@ export default function PropertyPage() {
     bedrooms: 0,
     isForRent: false
   });
+  const searchParams = useSearchParams();
+
+useEffect(() => {
+  const propertyTypeParam = searchParams.get('propertyType');
+  const listingTypeParam = searchParams.get('listingType');
+  const searchParam = searchParams.get('search');
+
+  if (propertyTypeParam || listingTypeParam || searchParam) {
+    setFilters(prev => ({
+      ...prev,
+      propertyType: propertyTypeParam || prev.propertyType,
+      isForRent: listingTypeParam === 'rent',
+      searchTerm: searchParam || prev.searchTerm,
+    }));
+  }
+}, [searchParams]);
 
   const [displayCount, setDisplayCount] = useState(8); // Show 8 properties initially
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc'>('newest');
   
   const router = useRouter();
 
@@ -111,24 +134,23 @@ export default function PropertyPage() {
   }, [fetchProperties]);
 
   // Convert context properties to Project format
-  const allProperties = useMemo(() => {
-    if (!contextProperties || contextProperties.length === 0) {
-      return [];
-    }
+const allProperties = useMemo(() => {
+  if (!contextProperties || contextProperties.length === 0) {
+    return [];
+  }
 
-    try {
-      return contextProperties.map((property: unknown) => {
-        const apiProperty = property as ApiProperty;
-        return convertPropertyToProject(apiProperty);
-      });
-    } catch (error) {
-      console.error('Error converting properties:', error);
-      return [];
-    }
-  }, [contextProperties]);
+  try {
+    return contextProperties.map((property: unknown) => {
+      const contextProperty = property as ContextProperty;
+      return convertPropertyToProject(contextProperty);
+    });
+  } catch (error) {
+    console.error('Error converting properties:', error);
+    return [];
+  }
+}, [contextProperties]);
 
-  // Simple search filtering - only by search term
-  const filteredProperties = useMemo(() => {
+   const filteredProperties = useMemo(() => {
     if (allProperties.length === 0) return [];
 
     return allProperties.filter(property => {
@@ -138,15 +160,45 @@ export default function PropertyPage() {
          property.location.address.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
         (property.description && property.description.toLowerCase().includes(filters.searchTerm.toLowerCase()));
 
-      return matchesSearch;
+      const matchesType = filters.propertyType === '' || 
+        property.propertyType === filters.propertyType;
+
+      const matchesBedrooms = filters.bedrooms === 0 || 
+        (property.features?.bedrooms ?? 0) >= filters.bedrooms;
+
+      const matchesPrice = property.priceValue >= filters.minPrice && 
+        property.priceValue <= filters.maxPrice;
+
+      const matchesListingType = filters.isForRent 
+        ? property.listingType === 'rent' 
+        : property.listingType !== 'rent';
+
+      return matchesSearch && matchesType && matchesBedrooms && matchesPrice && matchesListingType;
     });
-  }, [allProperties, filters.searchTerm]);
+  }, [allProperties, filters]);
 
   // Properties to display (with show more functionality)
-  const displayedProperties = useMemo(() => {
-    return filteredProperties.slice(0, displayCount);
-  }, [filteredProperties, displayCount]);
+  const sortedProperties = useMemo(() => {
+  const sorted = [...filteredProperties];
 
+  if (sortBy === 'price-asc') {
+    sorted.sort((a, b) => a.priceValue - b.priceValue);
+  } else if (sortBy === 'price-desc') {
+    sorted.sort((a, b) => b.priceValue - a.priceValue);
+  } else {
+    sorted.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA; // newest first
+    });
+  }
+
+  return sorted;
+}, [filteredProperties, sortBy]);
+
+const displayedProperties = useMemo(() => {
+  return sortedProperties.slice(0, displayCount);
+}, [sortedProperties, displayCount]);
   // Handle filter changes from PropertySearchFilterBar
   const handleFilterChange = (newFilters: Partial<SearchFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -224,13 +276,25 @@ export default function PropertyPage() {
                   <span className="pb-2 cursor-pointer text-gray-500 hover:text-gray-800 transition-colors duration-200">New Projects</span>
                   <span className="pb-2 cursor-pointer text-gray-500 hover:text-gray-800 transition-colors duration-200">Eligible Properties</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Map View</span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
+                <div className="flex items-center gap-4">
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-asc' | 'price-desc')}
+    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-200 cursor-pointer"
+  >
+    <option value="newest">Sort by: Newest</option>
+    <option value="price-asc">Price: Low to High</option>
+    <option value="price-desc">Price: High to Low</option>
+  </select>
+
+  <div className="flex items-center space-x-2">
+    <span className="text-sm text-gray-500">Map View</span>
+    <label className="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" className="sr-only peer" />
+      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+    </label>
+  </div>
+</div>
               </div>
               
               {/* Display properties */}
