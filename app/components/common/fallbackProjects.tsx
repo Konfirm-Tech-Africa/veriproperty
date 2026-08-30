@@ -28,11 +28,14 @@ interface Features {
 export interface Project {
   id: string;
   agentId: string;
-  agent?: Agent; // ✅ Add this optional agent property
+  agent?: Agent;
   media?: Media[];
   title: string;
   location: Location;
   price: string;
+  priceValue: number;
+  listingType: 'sale' | 'rent' | 'shortlet';
+  createdAt?: string;
   isNew: boolean;
   propertyType: string;
   features: Features;
@@ -267,6 +270,8 @@ export const fallbackProjects: Project[] = [
       country: 'Nigeria'
     },
     price: '# 5,500',
+    priceValue: 5500,
+    listingType: 'sale',
     isNew: true,
     propertyType: 'Condominium',
     features: {
@@ -297,6 +302,8 @@ export const fallbackProjects: Project[] = [
       country: 'Nigeria'
     },
     price: '# 8,480,000',
+    priceValue: 8480000,
+    listingType: 'sale',
     isNew: true,
     propertyType: 'Detached House',
     features: {
@@ -327,6 +334,8 @@ export const fallbackProjects: Project[] = [
       country: 'Nigeria'
     },
     price: '# 5,500',
+    priceValue: 5500,
+    listingType: 'sale',
     isNew: true,
     propertyType: 'Condominium',
     features: {
@@ -357,6 +366,8 @@ export const fallbackProjects: Project[] = [
       country: 'Nigeria'
     },
     price: '# 8,480,000',
+    priceValue: 8480000,
+    listingType: 'sale',
     isNew: true,
     propertyType: 'Detached House',
     features: {

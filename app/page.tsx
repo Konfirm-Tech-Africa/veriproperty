@@ -1,6 +1,10 @@
 import { Navbar } from "@/app/components/navbar";
 import Hero from "./components/Hero";
 import BottomContainer from "./components/BottomContainer";
+import WhatBringsYouHere from "./components/WhatBringsYouHere";
+import TrustSection from "./components/TrustSection";
+import ExploreByCategory from "./components/ExploreByCategory";
+import ExploreByLocation from "./components/ExploreByLocation";
 import PropertyList from "./components/property/PropertyList";
 import Footer from "./components/footer";
 import PropertyBannerSlider from "./components/PropertyBannerSlider";
@@ -13,6 +17,10 @@ export default function Home() {
       {/* <Navbar /> */}
       <Navbar />
       <Hero />
+      <WhatBringsYouHere />
+      <TrustSection />
+      <ExploreByCategory />
+      <ExploreByLocation />
       <PropertyBannerSlider />
       <PropertyList />
       <StatsSection />
